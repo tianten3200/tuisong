@@ -1,0 +1,25 @@
+name: Anti-Recycle (3 Days)
+
+on:
+  schedule:
+    # 每 2 天运行一次，防止 3 天回收
+    - cron: '0 */48 * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Container
+        run: |
+          echo "🔄 Anti-recycle keepalive at $(date -u)"
+          
+          # 访问 Cloudflare 隧道
+          echo "Pinging Cloudflare tunnel..."
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" https://mokey.3200300.xyz || true
+          
+          # 访问桥接服务健康检查
+          echo "Checking bridge health..."
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" https://mokey.3200300.xyz/health || true
+          
+          echo "✅ Keepalive completed"
