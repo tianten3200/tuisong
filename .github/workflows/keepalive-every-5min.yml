@@ -1,0 +1,39 @@
+name: Container Keepalive (5min)
+
+on:
+  schedule:
+    # 每 5 分钟执行一次（防止 15 分钟休眠）
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Container
+        run: |
+          echo "🔄 Keepalive started at $(date -u)"
+          
+          # 重试 3 次
+          for i in 1 2 3; do
+            echo "Attempt $i..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 \
+              --max-time 30 \
+              https://mokey.monkeycode.ai/ 2>/dev/null || echo "000")
+            
+            echo "HTTP Status: $STATUS"
+            
+            if [ "$STATUS" != "000" ] && [ "$STATUS" != "404" ]; then
+              echo "✅ Success!"
+              exit 0
+            elif [ "$STATUS" = "404" ]; then
+              echo "✅ Service is up (404 is OK)!"
+              exit 0
+            fi
+            
+            sleep 10
+          done
+          
+          echo "⚠️ All attempts failed, but container might still be alive"

@@ -1,0 +1,34 @@
+name: Daily Keepalive (Anti-Recycle)
+
+on:
+  schedule:
+    # 每天运行一次（防止 3 天回收）
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Deep Ping Container
+        run: |
+          echo "🔄 Daily keepalive at $(date -u)"
+          
+          # 访问多个端点
+          endpoints=(
+            "https://mokey.monkeycode.ai/"
+            "https://ssh.mokeycode.3200300.xyz/"
+            "https://ai.mokeycode.3200300.xyz/"
+          )
+          
+          for url in "${endpoints[@]}"; do
+            echo "Testing $url..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 \
+              --max-time 30 \
+              "$url" 2>/dev/null || echo "000")
+            echo "  → HTTP $STATUS"
+          done
+          
+          echo "✅ Daily keepalive completed at $(date -u)"
