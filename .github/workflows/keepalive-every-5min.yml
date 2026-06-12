@@ -21,19 +21,17 @@ jobs:
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
               --connect-timeout 10 \
               --max-time 30 \
-              https://mokey.monkeycode.ai/ 2>/dev/null || echo "000")
+              https://mokeycode.3200300.xyz/ 2>/dev/null || echo "000")
             
             echo "HTTP Status: $STATUS"
             
-            if [ "$STATUS" != "000" ] && [ "$STATUS" != "404" ]; then
-              echo "✅ Success!"
-              exit 0
-            elif [ "$STATUS" = "404" ]; then
-              echo "✅ Service is up (404 is OK)!"
+            # 403 也算通（Cloudflare 返回）
+            if [ "$STATUS" = "403" ] || [ "$STATUS" = "404" ] || [ "$STATUS" = "200" ]; then
+              echo "✅ Service is up!"
               exit 0
             fi
             
             sleep 10
           done
           
-          echo "⚠️ All attempts failed, but container might still be alive"
+          echo "⚠️ All attempts failed"
